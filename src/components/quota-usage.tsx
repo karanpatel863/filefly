@@ -12,23 +12,29 @@ export const QuotaUsage = () => {
   }
 
   return (
-    <>
-      <div className="rounded-full bg-teal-900 text-[#33C6AB] py-1 px-3 flex gap-2">
+    <div
+      className={
+        "flex gap-2 text-sm items-center justify-center h-full antialiased"
+      }
+    >
+      <div className="rounded-full bg-teal-900 text-teal-500 py-1 px-3 flex gap-2">
         <div className={"font-mono"}>
           usage: {quota.usage}/{quota.limit}
         </div>
       </div>
-      {quota.remaining <= 0 && (
-        <PricingLink>
-          <span
-            className={
-              "rounded-full border border-red-500 bg-red-none text-red-500 py-1 px-3 flex gap-2"
-            }
-          >
-            Upgrade
-          </span>
-        </PricingLink>
-      )}
-    </>
+      <div>
+        {quota.remaining <= 0 && (
+          <PricingLink>
+            <span
+              className={
+                "rounded-md bg-red-800 hover:bg-red-600 text-red-100 py-1 px-3 flex gap-2"
+              }
+            >
+              Upgrade
+            </span>
+          </PricingLink>
+        )}
+      </div>
+    </div>
   );
 };
