@@ -1,8 +1,10 @@
 "use server";
 
-import axios from "axios";
 import { Kobble } from "@kobbleio/admin";
 import { getAuth } from "@kobbleio/next/server";
+import getFirebaseAdmin from "@/lib/firebase-admin";
+import { firestore } from "firebase-admin";
+import Timestamp = firestore.Timestamp;
 
 export async function generateLink(uuid: string) {
   if (!process.env.KOBBLE_SDK_SECRET_KEY) {
@@ -10,6 +12,8 @@ export async function generateLink(uuid: string) {
       "KOBBLE_SDK_SECRET_KEY is not set. Please set it in your environment variables.",
     );
   }
+
+  const admin = getFirebaseAdmin();
 
   const { session } = await getAuth();
 
@@ -19,9 +23,18 @@ export async function generateLink(uuid: string) {
 
   const kobble = new Kobble(process.env.KOBBLE_SDK_SECRET_KEY);
 
+  const signedUrlResponse = await admin
+    .storage()
+    .bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET)
+    .file(`uploads/${uuid}`)
+    .getSignedUrl({
+      action: "read",
+      expires: "03-09-2491", // never
+    });
+
   const isAllowed = kobble.users.hasRemainingQuota(
     session.user.id,
-    "link-generated",
+    "shared-links",
   );
 
   if (!isAllowed) {
@@ -30,23 +43,34 @@ export async function generateLink(uuid: string) {
     );
   }
 
-  const response = await axios.post(
-    "https://api.dezgo.com/text2image",
-    {
-      prompt,
-      width: 320,
-      height: 320,
-      model: "0001softrealistic_v187",
-    },
-    {
-      responseType: "arraybuffer",
-      headers: {
-        "x-dezgo-key": process.env.DEZGO_API_KEY,
-      },
-    },
-  );
+  await admin.firestore().collection("links").doc(uuid).set({
+    userId: session.user.id,
+    signedUrl: signedUrlResponse?.[0],
+    createdAt: Timestamp.now(),
+  });
 
-  await kobble.users.incrementQuotaUsage(session.user.id, "image-generated");
+  await kobble.users.incrementQuotaUsage(session.user.id, "shared-links");
 
-  return response.data as ArrayBuffer;
+  return {
+    link: `https://filefly.link/f/${uuid}`,
+  };
 }
+
+export const retrieveFile = async (uuid: string) => {
+  const admin = getFirebaseAdmin();
+
+  const snap = await admin.firestore().collection("links").doc(uuid).get();
+
+  if (!snap?.exists) {
+    throw new Error("Link not found");
+  }
+
+  const data = snap.data();
+  if (!data) {
+    throw new Error("Link not found");
+  }
+
+  return {
+    signedUrl: data.signedUrl,
+  };
+};

@@ -9,182 +9,156 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import Dropzone from "react-dropzone";
-import { useAuth } from "@kobbleio/next/client";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytesResumable } from "@firebase/storage";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { SignedIn, LoginButton, SignedOut } from "@kobbleio/next/client";
+import { useRouter } from "next/navigation";
+import { ls } from "@/lib/local-storage";
+import { SuccessAnimation } from "@/components/ui/success-animation";
+import { nanoid } from "nanoid";
+import { QuotaUsage } from "@/components/quota-usage";
 
 export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const { user } = useAuth();
-
-  const isFileReady = useMemo(() => {
-    return progress === 100;
-  }, [progress]);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const router = useRouter();
 
   const handleUpload = (files: File[]) => {
-    console.log(files);
     setIsDragging(false);
     setProgress(0);
     setIsUploading(true);
 
-    // generate unguessable UUID
-    const uuid = crypto.randomUUID();
+    const uuid = nanoid();
     const storageRef = ref(storage, `uploads/${uuid}`);
     const uploadTask = uploadBytesResumable(storageRef, files[0]);
 
     uploadTask.on("state_changed", (snapshot) => {
-      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      console.log("Upload is " + progress + "% done");
+      const progressFloat =
+        (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      const progressDecimal = progressFloat.toFixed(0);
+      const progress = parseInt(progressDecimal, 10);
+
       setProgress(progress);
-      localStorage.setItem("filefly-upload-uuid", uuid);
+      ls.setLatestUploadId(uuid);
 
       if (progress === 100) {
-        setIsUploading(false);
+        setIsSuccess(true);
+        setTimeout(() => {
+          handleSuccessAnimationComplete();
+        }, 2000);
       }
     });
   };
 
-  const getLink = () => {
-    const uuid = localStorage.getItem("filefly-upload-uuid");
-    console.log(uuid);
-
-    if (!uuid) {
-      return setProgress(0);
-    }
+  const handleSuccessAnimationComplete = () => {
+    const uuid = ls.getLatestUploadId();
+    router.push(`/upload/${uuid}`);
   };
 
-  if (!isFileReady) {
-    return (
-      <div>
-        <div
-          className={`h-screen flex items-center justify-center bg-gradient-to-r from-teal-200 to-teal-500`}
-        >
-          <main className={"flex-grow gap-3"}>
-            <div className={"container max-w-2xl flex justify-center"}>
-              <div>
-                <Card className="w-[400px]">
-                  <CardHeader>
-                    <CardTitle>Share it!</CardTitle>
-                    <CardDescription>
-                      Get your link and share it with your friends.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardFooter className="flex justify-center gap-3">
-                    <SignedIn>
-                      <LoginButton>
-                        <Button>Sign-in to get my link</Button>
-                      </LoginButton>
-                    </SignedIn>
-                    <SignedIn>
-                      <Button onClick={getLink}>Get my link</Button>
-                    </SignedIn>
-                  </CardFooter>
-                </Card>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <Dropzone
-      onDrop={(acceptedFiles) => console.log(acceptedFiles)}
-      onDragEnter={() => setIsDragging(true)}
-      onDragLeave={() => setIsDragging(false)}
-      onDropRejected={() => setIsDragging(false)}
-      onDropAccepted={handleUpload}
-    >
-      {({ getRootProps, getInputProps }) => (
-        <div
-          {...getRootProps()}
-          className={`h-screen flex items-center justify-center bg-gradient-to-r from-teal-200 to-teal-500`}
-        >
-          {isDragging && (
-            <div
-              className={
-                "bg-teal-300/90 fixed top-0 left-0 bottom-0 right-0 z-50 p-10"
-              }
-            >
+    <>
+      <div className={"fixed top-0 right-0 p-10"}>
+        <QuotaUsage></QuotaUsage>
+      </div>
+      <Dropzone
+        onDrop={(acceptedFiles) => console.log(acceptedFiles)}
+        onDragEnter={() => setIsDragging(true)}
+        onDragLeave={() => setIsDragging(false)}
+        onDropRejected={() => setIsDragging(false)}
+        onDropAccepted={handleUpload}
+      >
+        {({ getRootProps, getInputProps }) => (
+          <div
+            {...getRootProps()}
+            className={`h-screen flex items-center justify-center bg-gradient-to-r from-teal-200 to-teal-500 ${isUploading && "animated-background"}`}
+          >
+            {isSuccess && (
               <div
                 className={
-                  "border-dashed border-4 border-teal-500 p-10 flex items-center justify-center h-full w-full rounded-2xl"
+                  "fixed top-0 bottom-0 right-0 left-0 flex items-center justify-center z-50"
                 }
               >
-                <h1 className={"text-4xl text-teal-700 font-bold"}>
-                  Drop your file anywhere
-                </h1>
+                <div className={"max-w-xl"}>
+                  <SuccessAnimation
+                    onComplete={handleSuccessAnimationComplete}
+                  />
+                </div>
               </div>
-            </div>
-          )}
-          <main className={"flex-grow gap-3"}>
-            <div className={"container max-w-2xl flex justify-center"}>
-              <div>
-                {!isUploading && (
-                  <Card className="w-[400px]">
-                    <CardHeader>
-                      <CardTitle>Drop your files</CardTitle>
-                      <CardDescription>
-                        Deploy your new project in one-click.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div
-                        className={
-                          "rounded-2xl border-dashed border p-3 text-center flex flex-col items-center justify-center"
-                        }
-                      >
-                        <Image
-                          width={50}
-                          height={50}
-                          src={"upload.svg"}
-                          alt={"upload"}
-                        />
-                        <p className={"text-sm"}>
-                          Upload any file, any format, any size.
-                        </p>
-                        <input {...getInputProps()} />
-                      </div>
-                    </CardContent>
-                    {/*<CardFooter className="flex justify-center gap-3">*/}
-                    {/*  <Button variant="outline">Cancel</Button>*/}
-                    {/*  <Button>Get fly link</Button>*/}
-                    {/*</CardFooter>*/}
-                  </Card>
-                )}
+            )}
+            {isDragging && (
+              <div
+                className={
+                  "bg-teal-300/90 fixed top-0 left-0 bottom-0 right-0 z-50 p-10"
+                }
+              >
+                <div
+                  className={
+                    "border-dashed border-4 border-teal-500 p-10 flex items-center justify-center h-full w-full rounded-2xl"
+                  }
+                >
+                  <h1 className={"text-4xl text-teal-700 font-bold"}>
+                    Drop your file anywhere
+                  </h1>
+                </div>
+              </div>
+            )}
+            <main className={"flex-grow gap-3"}>
+              <div className={"container max-w-2xl flex justify-center"}>
+                <div>
+                  {!isUploading && (
+                    <Card className="w-[400px]">
+                      <CardHeader>
+                        <CardTitle>Drop your files</CardTitle>
+                        <CardDescription>
+                          Instantly share files with anyone.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div
+                          className={
+                            "rounded-2xl border-dashed border p-3 text-center flex flex-col items-center justify-center"
+                          }
+                        >
+                          <Image
+                            width={50}
+                            height={50}
+                            src={"upload.svg"}
+                            alt={"upload"}
+                          />
+                          <p className={"text-sm"}>
+                            Upload any file, any format, any size.
+                          </p>
+                          <input {...getInputProps()} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
-                {isUploading && (
-                  <Card className="w-[400px]">
-                    <CardHeader>
-                      <CardTitle>Uploading {progress}%</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div
-                        className={
-                          "rounded-2xl border-dashed border p-3 text-center flex flex-col items-center justify-center"
-                        }
-                      >
-                        <Progress value={progress} />
-                      </div>
-                    </CardContent>
-                    {/*<CardFooter className="flex justify-center gap-3">*/}
-                    {/*  <Button variant="outline">Cancel</Button>*/}
-                    {/*  <Button>Get fly link</Button>*/}
-                    {/*</CardFooter>*/}
-                  </Card>
-                )}
+                  {isUploading && (
+                    <Card className="w-[400px]">
+                      <CardHeader>
+                        <CardTitle>Uploading {progress}%</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div
+                          className={
+                            "rounded-2xl border-dashed border p-3 text-center flex flex-col items-center justify-center"
+                          }
+                        >
+                          <Progress value={progress} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </div>
-            </div>
-          </main>
-        </div>
-      )}
-    </Dropzone>
+            </main>
+          </div>
+        )}
+      </Dropzone>
+    </>
   );
 }
