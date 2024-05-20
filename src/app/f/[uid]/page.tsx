@@ -3,7 +3,6 @@
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -15,7 +14,11 @@ import { retrieveFile } from "@/app/actions";
 import useDownloader from "react-use-downloader";
 import { Progress } from "@/components/ui/progress";
 
-export default function UploadPage({ params: { uid } }) {
+export default function UploadPage({
+  params: { uid },
+}: {
+  params: { uid: string };
+}) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [fileUrl, setFileUrl] = useState<string | null>(null);

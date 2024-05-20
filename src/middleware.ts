@@ -1,7 +1,7 @@
 import { authMiddleware } from "@kobbleio/next/server";
 
 export default authMiddleware({
-  publicRoutes: ["/"],
+  publicRoutes: ["/", "/upload/:uid"],
 });
 
 export const config = {

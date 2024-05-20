@@ -15,7 +15,7 @@ export const QuotaUsage = () => {
     <>
       <div className="rounded-full bg-teal-900 text-[#33C6AB] py-1 px-3 flex gap-2">
         <div className={"font-mono"}>
-          usage: {quota.usage}/ {quota.limit}
+          usage: {quota.usage}/{quota.limit}
         </div>
       </div>
       {quota.remaining <= 0 && (

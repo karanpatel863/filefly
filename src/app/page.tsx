@@ -6,10 +6,10 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
+import { Header } from "@/components/header";
 import Dropzone from "react-dropzone";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytesResumable } from "@firebase/storage";
 import { Progress } from "@/components/ui/progress";
@@ -25,6 +25,13 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const pendingUpload = ls.getLatestUploadId();
+    if (pendingUpload?.length) {
+      router.push(`/upload/${pendingUpload}`);
+    }
+  }, [router]);
 
   const handleUpload = (files: File[]) => {
     setIsDragging(false);
@@ -60,9 +67,7 @@ export default function Home() {
 
   return (
     <>
-      <div className={"fixed top-0 right-0 p-10"}>
-        <QuotaUsage></QuotaUsage>
-      </div>
+      <Header />
       <Dropzone
         onDrop={(acceptedFiles) => console.log(acceptedFiles)}
         onDragEnter={() => setIsDragging(true)}

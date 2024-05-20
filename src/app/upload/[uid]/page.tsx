@@ -8,15 +8,27 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { SignedIn, SignedOut, LoginButton } from "@kobbleio/next/client";
+import {
+  SignedIn,
+  SignedOut,
+  LoginButton,
+  IsAllowed,
+  IsForbidden,
+  PricingLink,
+} from "@kobbleio/next/client";
 import { generateLink } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { Copiable } from "@/components/ui/copiable";
 import { useState } from "react";
 import { ArrowPathIcon } from "@heroicons/react/16/solid";
-import { QuotaUsage } from "@/components/quota-usage";
+import { Header } from "@/components/header";
+import { ls } from "@/lib/local-storage";
 
-export default function UploadPage({ params: { uid } }) {
+export default function UploadPage({
+  params: { uid },
+}: {
+  params: { uid: string };
+}) {
   const router = useRouter();
   const [isCopied, setIsCopied] = useState(false);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
@@ -36,6 +48,7 @@ export default function UploadPage({ params: { uid } }) {
   const getLink = async () => {
     if (!uid) return console.error("No uid");
 
+    ls.resetLatestUploadId();
     const { link } = await generateLink(uid);
 
     setSignedUrl(link);
@@ -43,6 +56,7 @@ export default function UploadPage({ params: { uid } }) {
 
   return (
     <>
+      <Header />
       <div onClick={handleCopy}>
         {isCopied && (
           <div
@@ -77,7 +91,7 @@ export default function UploadPage({ params: { uid } }) {
                   <CardFooter className="flex justify-center gap-3">
                     <SignedOut>
                       <LoginButton>
-                        <Button>Sign-in to get my link</Button>
+                        <Button>Get my link</Button>
                       </LoginButton>
                     </SignedOut>
                     <SignedIn>
@@ -87,9 +101,28 @@ export default function UploadPage({ params: { uid } }) {
                         )}
 
                         {!signedUrl && (
-                          <Button onClick={getLink} className={"w-full"}>
-                            Get my link
-                          </Button>
+                          <>
+                            <IsAllowed quota={"shared-links"}>
+                              <Button onClick={getLink} className={"w-full"}>
+                                Get my link
+                              </Button>
+                            </IsAllowed>
+                            <IsForbidden quota={"shared-links"}>
+                              <div
+                                className={"w-full bg-red-100 p-3 rounded-lg"}
+                              >
+                                <p className={"text-red-700"}>
+                                  You have reached the maximum number of files
+                                  you can share.{" "}
+                                  <PricingLink
+                                    className={"font-medium hover:underline"}
+                                  >
+                                    View Pricing
+                                  </PricingLink>
+                                </p>
+                              </div>
+                            </IsForbidden>
+                          </>
                         )}
 
                         <div className={"w-full flex justify-center"}>
@@ -98,6 +131,7 @@ export default function UploadPage({ params: { uid } }) {
                             variant={"outline"}
                             onClick={(e) => {
                               e.stopPropagation();
+                              ls.resetLatestUploadId();
                               router.push("/");
                             }}
                           >
