@@ -2,11 +2,9 @@ import Lottie from "react-lottie";
 import animationData from "@/lib/lotties/success.json";
 import { PropsWithChildren } from "react";
 
-type Props = PropsWithChildren<{
-  onComplete: () => void;
-}>;
+type Props = PropsWithChildren<{}>;
 
-export const SuccessAnimation: React.FC<Props> = ({ onComplete }) => {
+export const SuccessAnimation: React.FC<Props> = () => {
   const options = {
     loop: false,
     autoplay: true,
@@ -14,7 +12,6 @@ export const SuccessAnimation: React.FC<Props> = ({ onComplete }) => {
     rendererSettings: {
       preserveAspectRatio: "xMidYMid slice",
     },
-    onComplete: onComplete,
   };
 
   return <Lottie options={options}></Lottie>;

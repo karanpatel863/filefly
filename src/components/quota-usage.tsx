@@ -34,6 +34,17 @@ export const QuotaUsage = () => {
             </span>
           </PricingLink>
         )}
+        {quota.remaining > 0 && (
+          <PricingLink>
+            <span
+              className={
+                "rounded-md bg-teal-500 hover:bg-red-600 text-red-100 py-1 px-3 flex gap-2"
+              }
+            >
+              View pricing
+            </span>
+          </PricingLink>
+        )}
       </div>
     </div>
   );

@@ -17,16 +17,21 @@ import { useRouter } from "next/navigation";
 import { ls } from "@/lib/local-storage";
 import { SuccessAnimation } from "@/components/ui/success-animation";
 import { nanoid } from "nanoid";
+import { useAuth } from "@kobbleio/next/client";
 
 export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     const pendingUpload = ls.getLatestUploadId();
+
+    ls.resetLatestUploadId();
+
     if (pendingUpload?.length) {
       router.push(`/upload/${pendingUpload}`);
     }
@@ -52,19 +57,22 @@ export default function Home() {
       const progress = parseInt(progressDecimal, 10);
 
       setProgress(progress);
-      ls.setLatestUploadId(uuid);
 
       if (progress === 100) {
         setIsSuccess(true);
+
+        if (!user) {
+          ls.setLatestUploadId(uuid);
+        }
+
         setTimeout(() => {
-          handleSuccessAnimationComplete();
+          handleSuccessAnimationComplete(uuid);
         }, 2000);
       }
     });
   };
 
-  const handleSuccessAnimationComplete = () => {
-    const uuid = ls.getLatestUploadId();
+  const handleSuccessAnimationComplete = (uuid: string) => {
     router.push(`/upload/${uuid}`);
   };
 
@@ -90,9 +98,7 @@ export default function Home() {
                 }
               >
                 <div className={"max-w-xl"}>
-                  <SuccessAnimation
-                    onComplete={handleSuccessAnimationComplete}
-                  />
+                  <SuccessAnimation />
                 </div>
               </div>
             )}
