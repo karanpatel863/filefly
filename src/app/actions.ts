@@ -23,14 +23,17 @@ export async function generateLink(uuid: string) {
 
   const kobble = new Kobble(process.env.KOBBLE_SDK_SECRET_KEY);
 
-  const signedUrlResponse = await admin
+  const ref = await admin
     .storage()
     .bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET)
-    .file(`uploads/${uuid}`)
-    .getSignedUrl({
-      action: "read",
-      expires: "03-09-2491", // never
-    });
+    .file(`uploads/${uuid}`);
+
+  const meta = await ref.getMetadata();
+
+  const signedUrlResponse = await ref.getSignedUrl({
+    action: "read",
+    expires: "03-09-2491", // never
+  });
 
   const isAllowed = kobble.users.hasRemainingQuota(
     session.user.id,
@@ -43,11 +46,19 @@ export async function generateLink(uuid: string) {
     );
   }
 
-  await admin.firestore().collection("links").doc(uuid).set({
-    userId: session.user.id,
-    signedUrl: signedUrlResponse?.[0],
-    createdAt: Timestamp.now(),
-  });
+  await admin
+    .firestore()
+    .collection("links")
+    .doc(uuid)
+    .set({
+      userId: session.user.id,
+      signedUrl: signedUrlResponse?.[0],
+      createdAt: Timestamp.now(),
+      id: uuid,
+      originalName: meta[0].metadata?.name ?? null,
+      size: parseInt(meta[0].size as string) ?? null,
+      contentType: meta[0].contentType ?? null,
+    });
 
   await kobble.users.incrementQuotaUsage(session.user.id, "shared-links");
 
@@ -72,5 +83,8 @@ export const retrieveFile = async (uuid: string) => {
 
   return {
     signedUrl: data.signedUrl,
+    originalName: data.originalName,
+    size: data.size,
+    contentType: data.contentType,
   };
 };

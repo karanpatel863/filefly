@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { retrieveFile } from "@/app/actions";
 import useDownloader from "react-use-downloader";
 import { Progress } from "@/components/ui/progress";
+import prettyBytes from "pretty-bytes";
 
 export default function UploadPage({
   params: { uid },
@@ -21,19 +22,25 @@ export default function UploadPage({
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [fileInfo, setFileInfo] = useState<{
+    signedUrl: string;
+    size: number;
+    contentType: string;
+    originalName: string;
+  } | null>(null);
 
   const { size, elapsed, percentage, download, cancel, error, isInProgress } =
     useDownloader();
 
-  const handleDownload = () => {
-    alert("downloading");
-  };
-
   const fetchData = async (uid: string) => {
     const file = await retrieveFile(uid);
-    console.log("FILE", file);
-    setFileUrl(file.signedUrl);
+
+    setFileInfo({
+      signedUrl: file.signedUrl,
+      originalName: file.originalName,
+      size: file.size,
+      contentType: file.contentType,
+    });
   };
 
   useEffect(() => {
@@ -58,17 +65,29 @@ export default function UploadPage({
                 <CardHeader>
                   <CardTitle>Your file is ready!</CardTitle>
                 </CardHeader>
-                {isInProgress && (
-                  <CardContent>
-                    <Progress value={percentage} />
-                  </CardContent>
-                )}
+                <CardContent>
+                  {fileInfo && (
+                    <div className={"text-center mb-5"}>
+                      <div className={"text-gray-600"}>
+                        {fileInfo.originalName ?? "NA"}
+                      </div>
+                      <div className={"text-gray-500"}>
+                        {prettyBytes(fileInfo.size)}
+                      </div>
+                    </div>
+                  )}
+
+                  {isInProgress && <Progress value={percentage} />}
+                </CardContent>
                 {!isInProgress && (
                   <CardFooter className="flex items-center justify-center">
                     <Button
                       size={"sm"}
                       onClick={() => {
-                        download(fileUrl!, "filefly");
+                        download(
+                          fileInfo?.signedUrl!,
+                          fileInfo?.originalName ?? "Filefly file",
+                        );
                       }}
                     >
                       Download

@@ -17,7 +17,6 @@ import { useRouter } from "next/navigation";
 import { ls } from "@/lib/local-storage";
 import { SuccessAnimation } from "@/components/ui/success-animation";
 import { nanoid } from "nanoid";
-import { QuotaUsage } from "@/components/quota-usage";
 
 export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
@@ -40,7 +39,11 @@ export default function Home() {
 
     const uuid = nanoid();
     const storageRef = ref(storage, `uploads/${uuid}`);
-    const uploadTask = uploadBytesResumable(storageRef, files[0]);
+    const uploadTask = uploadBytesResumable(storageRef, files[0], {
+      customMetadata: {
+        name: files[0].name,
+      },
+    });
 
     uploadTask.on("state_changed", (snapshot) => {
       const progressFloat =
@@ -69,7 +72,7 @@ export default function Home() {
     <>
       <Header />
       <Dropzone
-        onDrop={(acceptedFiles) => console.log(acceptedFiles)}
+        onDrop={(acceptedFiles) => {}}
         onDragEnter={() => setIsDragging(true)}
         onDragLeave={() => setIsDragging(false)}
         onDropRejected={() => setIsDragging(false)}
@@ -134,7 +137,7 @@ export default function Home() {
                             alt={"upload"}
                           />
                           <p className={"text-sm"}>
-                            Upload any file, any format, any size.
+                            Upload any file, any format, up to 100GB
                           </p>
                           <input {...getInputProps()} />
                         </div>
