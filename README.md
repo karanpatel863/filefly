@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+<a href="https://filefly.link" target="_blank" rel="noopener">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" alt="Filefly" srcset="https://github.com/kevinpiac/filefly/blob/main/.readme/banner.png?raw=true" />
+    <img alt="Filefly" src="https://github.com/kevinpiac/filefly/blob/main/.readme/banner.png?raw=true" />
+  </picture>
+</a>
 
-## Getting Started
+<h4 align="center">
+  <a href="https://filefly.link">FileFly SaaS</a> |
+  <a href="https://kobble.io">Built with Kobble</a> |
+  <a href="https://plus.excalidraw.com">Follow me on X</a>
+</h4>
 
-First, run the development server:
+<div align="center">
+  <h2>
+    An open source file sharing SaaS to transform any file into a shareable link. It's built using Next.js, Kobble.io, Shadcn and deployed on Vercel. </br>
+  <br />
+  </h2>
+</div>
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+<figure>
+<a href="https://filefly.link" target="_blank" rel="noopener">
+  <img src="https://github.com/kevinpiac/filefly/blob/main/.readme/demo.gif?raw=true" alt="Demo gif" />
+</a>
+<figcaption>
+  <p align="center">
+    Share files with anyone, anywhere, anytime.
+  </p>
+</figcaption>
+</figure>
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Powered by Kobble.io
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+[filefly.link](https://filefly.link) is a minimal showcase of what you can build using Kobble.io
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+[Kobble.io](https://kobble.io) provides the following features for SaaS creators:
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- 📡&nbsp;Authentication with any social provider
+- 🤼&nbsp;Product management (in sync with Stripe)
+- 🔒&nbsp;Permission and quota management
+- 💾&nbsp;A nice crafter fullstack SDK that integrates perfectly with Next.js
+- 🔗&nbsp;And more...
